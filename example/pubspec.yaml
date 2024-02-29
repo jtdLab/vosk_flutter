@@ -1,0 +1,38 @@
+name: vosk_flutter_example
+description: Demonstrates how to use the vosk_flutter plugin.
+
+publish_to: 'none'
+
+environment:
+  sdk: ">=2.15.1 <3.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  vosk_flutter:
+    # When depending on this package from a real application you should use:
+    #   vosk_flutter: ^x.y.z
+    # See https://dart.dev/tools/pub/dependencies#version-constraints
+    # The example app is bundled with the plugin so we use a path dependency on
+    # the parent directory to use the current plugin's version.
+    path: ../
+
+  wav: ^1.3.0
+  record: ^4.4.4
+  mic_stream: ^0.7.1+2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  integration_test:
+    sdk: flutter
+
+  flutter_lints: ^3.0.1
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/audio/
+    - assets/models/

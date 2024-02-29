@@ -1,0 +1,75 @@
+group 'org.vosk.vosk_flutter'
+version '1.0'
+
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath 'com.android.tools.build:gradle:7.0.3'
+    }
+}
+
+rootProject.allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+apply plugin: 'com.android.library'
+
+android {
+    compileSdk 33
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    defaultConfig {
+        minSdkVersion 21
+        targetSdkVersion 30
+    }
+
+    sourceSets {
+        main {
+            jniLibs.srcDirs += ["src/main/cpp/lib/"]
+        }
+    }
+}
+
+// TODO: uncomment this on first run to download the binaries
+// def getPaths() {
+//     def localProperties = new Properties()
+//     def localPropertiesFile = rootProject.file('local.properties')
+//     if (localPropertiesFile.exists()) {
+//         localPropertiesFile.withReader('UTF-8') { reader ->
+//             localProperties.load(reader)
+//         }
+//     }
+
+//     def flutterRoot = localProperties.getProperty('flutter.sdk')
+//     def flutterExecutablePath = 'flutter'
+//     if (flutterRoot != null) {
+//         flutterExecutablePath = "${flutterRoot}${File.separator}bin${File.separator}flutter"
+//     }
+
+//     //on Windows use flutter.bat instead
+//     if (System.getProperty('os.name').toLowerCase(Locale.ROOT).contains('windows')) {
+//         flutterExecutablePath += '.bat'
+//     }
+
+//     return [flutterRoot, flutterExecutablePath]
+// }
+
+// task downloadVoskBinaries(type: Exec) {
+//     def (flutterRoot, flutterExecutablePath) = getPaths()
+
+//     workingDir "${project.rootProject.projectDir}${File.separator}.."
+//     commandLine flutterExecutablePath, 'pub', 'run', 'vosk_flutter', 'install', '-t', 'android'
+// }
+
+// preBuild.dependsOn downloadVoskBinaries

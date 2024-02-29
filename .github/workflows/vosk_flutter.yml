@@ -1,0 +1,141 @@
+name: vosk_flutter
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "**"
+      - "!**.md"
+      - "!**.gitignore"
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  analyze:
+    name: "Flutter analyze"
+    runs-on: macos-latest
+    timeout-minutes: 5
+    steps:
+      - name: "Checkout repository"
+        uses: actions/checkout@v3
+      - name: "Configure scripts"
+        run: chmod +x ./.github/workflows/scripts/*.sh
+      - name: "Install Flutter"
+        run: ./.github/workflows/scripts/install_flutter.sh
+      - name: "Run flutter analyze"
+        run: flutter analyze lib test
+
+  check_formatting:
+    name: "Check formatting"
+    runs-on: macos-latest
+    timeout-minutes: 5
+    steps:
+      - name: "Checkout repository"
+        uses: actions/checkout@v3
+      - name: "Configure scripts"
+        run: chmod +x ./.github/workflows/scripts/*.sh
+      - name: "Install Flutter"
+        run: ./.github/workflows/scripts/install_flutter.sh
+      - name: "Check dart formatting"
+        run: dart format --set-exit-if-changed lib test
+
+  unit_test:
+    name: "Unit test"
+    runs-on: macos-latest
+    timeout-minutes: 5
+    steps:
+      - name: "Checkout repository"
+        uses: actions/checkout@v3
+      - name: "Configure scripts"
+        run: chmod +x ./.github/workflows/scripts/*.sh
+      - name: "Install Flutter"
+        run: ./.github/workflows/scripts/install_flutter.sh
+      - name: "Run unit tests"
+        run: flutter test test/
+
+  android_integration_test:
+    name: "Android integration test"
+    runs-on: macos-latest
+    timeout-minutes: 40
+    needs: [analyze, check_formatting, unit_test]
+    steps:
+      - name: "Checkout repository"
+        uses: actions/checkout@v3
+      - name: "Configure scripts"
+        run: chmod +x ./.github/workflows/scripts/*.sh
+
+      - name: "Install Flutter"
+        run: ./.github/workflows/scripts/install_flutter.sh
+      - uses: actions/setup-java@v3
+        with:
+          distribution: "temurin"
+          java-version: "11"
+
+      - name: "Android Integration Test"
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 33
+          cores: 3
+          target: google_apis
+          arch: x86_64
+          profile: Nexus 5X
+          script: cd example && flutter test integration_test/common_test.dart
+
+  linux_integration_test:
+    name: "Linux integration test"
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [analyze, check_formatting, unit_test]
+    steps:
+      - name: "Checkout repository"
+        uses: actions/checkout@v3
+      - name: "Configure scripts"
+        run: chmod +x ./.github/workflows/scripts/*.sh
+
+      - name: "Install required tools"
+        run: sudo apt-get install ninja-build libgtk-3-dev
+
+
+      - name: "Install Flutter"
+        run: ./.github/workflows/scripts/install_flutter.sh
+
+      - name: "Linux Integration Test"
+        run: |
+            cd example
+            export DISPLAY=:99
+            # Use Xvfb to create virtual display and run integration test on it
+            sudo Xvfb -ac :99 -screen 0 1280x1024x24 > /dev/null 2>&1 & flutter test integration_test/common_test.dart -d linux
+
+  windows_integration_test:
+    name: "Windows integration test"
+    runs-on: windows-latest
+    timeout-minutes: 10
+    needs: [analyze, check_formatting, unit_test]
+    steps:
+      - name: "Checkout repository"
+        uses: actions/checkout@v3
+      - name: "Configure scripts"
+        run: chmod +x ./.github/workflows/scripts/*.sh
+
+      - name: "Install Flutter"
+        run: ./.github/workflows/scripts/install_flutter.sh
+
+      - name: "Windows Integration Test"
+        run: cd example && flutter test integration_test/common_test.dart -d windows
+
+  pub_dev_publish_check:
+    name: "Check pub.dev requirements"
+    timeout-minutes: 5
+    runs-on: macos-latest
+    needs: [android_integration_test, linux_integration_test, windows_integration_test]
+    steps:
+      - name: "Checkout repository"
+        uses: actions/checkout@v3
+      - name: "Configure scripts "
+        run: chmod +x ./.github/workflows/scripts/*.sh
+      - name: "Install Flutter"
+        run: ./.github/workflows/scripts/install_flutter.sh
+      - name: "Publish check"
+        run: flutter pub publish --dry-run
