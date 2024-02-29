@@ -39,4 +39,4 @@ _flutter/
 
 # Ignore Vosk binaries
 */libs/
-android/src/main/cpp/lib/
+# android/src/main/cpp/lib/
