@@ -20,7 +20,7 @@ Pod::Spec.new do |s|
     # Flutter.framework does not contain an i386 slice.
     s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES', 'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'i386' }
    
-     # telling CocoaPods not to remove framework
+    # telling CocoaPods not to remove framework
     s.preserve_paths = 'Frameworks/libvosk.xcframework'
 
     # telling linker to include framework & fix symbol not found when without use_framework!
@@ -35,6 +35,9 @@ Pod::Spec.new do |s|
 
     # including system frameworks
     s.frameworks = 'Accelerate'
+
+    # including apple privacy manifest
+    s.resource_bundles = {'vosk_flutter_apple_privacy' => ['Resources/PrivacyInfo.xcprivacy']}
 
     s.swift_version = '5.0'
   end
