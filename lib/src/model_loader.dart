@@ -93,6 +93,46 @@ class ModelLoader {
     return decompressedModelRoot;
   }
 
+  /// Load a model from the network and reports download progress.
+  ///
+  /// The returns [Stream] emits the download percentage.
+  ///
+  /// Tip: you can get a  [LanguageModelDescription] via [loadModelsList]
+  /// and use [LanguageModelDescription.url].
+  Stream<double> loadFromNetworkWithProgress(
+    String modelUrl, {
+    bool forceReload = false,
+  }) async* {
+    final modelName = path.basenameWithoutExtension(modelUrl);
+    if (!forceReload && await isModelAlreadyLoaded(modelName)) {
+      final modelPathValue = await modelPath(modelName);
+      log('Model already loaded to $modelPathValue', name: 'ModelLoader');
+      yield 100;
+      return;
+    }
+
+    final start = DateTime.now();
+
+    final response =
+        await httpClient.send(http.Request('GET', Uri.parse(modelUrl)));
+    final total = response.contentLength ?? 0;
+    var received = 0;
+    final bytes = <int>[];
+    await for (final e in response.stream) {
+      bytes.addAll(e);
+      received += e.length;
+      yield received / total;
+    }
+
+    final decompressionPath = await _extractModel(Uint8List.fromList(bytes));
+    final decompressedModelRoot = path.join(decompressionPath, modelName);
+    log(
+      'Model loaded to $decompressedModelRoot in '
+      '${DateTime.now().difference(start).inMilliseconds}ms',
+      name: 'ModelLoader',
+    );
+  }
+
   /// Load a list of all available models from the vosk lib web page.
   Future<List<LanguageModelDescription>> loadModelsList() async {
     final responseJson = (await httpClient.get(Uri.parse(_modelsListUrl))).body;
